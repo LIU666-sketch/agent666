@@ -12,7 +12,8 @@ import pyttsx3
 import threading
 from prompts import GovernmentAgentPrompts
 
-
+#语音全局变量
+current_engine = None
 # Define multi-round conversation function
 def multi_round(messages, option, model, endpoint_api_key, endpoint_api_secret, collection_name):
     if option == "Default":
@@ -128,7 +129,12 @@ def sidebar_configuration():
 
     # 删除任务类型选择，使用默认值
     task_type = "通用问答"
-
+    task_type = st.sidebar.selectbox(
+        "选择任务类型",
+        list(GovernmentAgentPrompts.TASK_PROMPTS.keys()),
+        key="task_type_select",
+        help="选择您需要处理的政务任务类型"
+    )
     return dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path, task_type
 
 
@@ -268,14 +274,14 @@ def main():
         if st.button("Submit Collection Name"):
             st.session_state['collection_name'] = collection_name
             st.session_state['show_modal'] = False
-            with st.spinner("正在解析文献..."):
+            with st.spinner("正在解析资料..."):
                 result, topics = vectorize_and_store_and_extract_topics(dashscope_api_key, dashvector_api_key,
                                                                         dashvector_endpoint, pdf_folder_path,
                                                                         collection_name)
                 if "successfully" in result:
-                    st.success("文献已解析完毕，可询问关于文献里的知识！")
+                    st.success("文件已解析完毕，可询问关于文件里的知识！")
                     st.session_state.messages = [
-                        {"role": "assistant", "content": "您好！文献已解析完毕，可询问关于文献里的知识！"}]
+                        {"role": "assistant", "content": "您好！文件已解析完毕，可询问关于文件里的知识！"}]
                     st.session_state["topics"] = topics
                 else:
                     st.error(result)
