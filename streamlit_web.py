@@ -10,6 +10,7 @@ from pdf_topics_web import extract_pdf_topics, draw_knowledge_graph, load_docume
 import speech_recognition as sr
 import pyttsx3
 import threading
+from prompts import GovernmentAgentPrompts
 
 
 # Define multi-round conversation function
@@ -102,7 +103,7 @@ def sidebar_configuration():
         st.session_state["chat_titles"] = []
 
     if st.sidebar.button("新建聊天记录"):
-        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有��么能帮到您？"}])
+        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有么能帮到您？"}])
         st.session_state["chat_titles"].append("聊天记录 " + str(len(st.session_state["chat_records"])))
         st.session_state["current_chat_index"] = len(st.session_state["chat_records"]) - 1
 
@@ -111,7 +112,10 @@ def sidebar_configuration():
             st.session_state["current_chat_index"] = i
             st.session_state["messages"] = record
 
-    return dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path
+    # 删除任务类型选择，使用默认值
+    task_type = "通用问答"
+
+    return dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path, task_type
 
 
 def list_pdf_files(pdf_folder_path):
@@ -212,7 +216,7 @@ def main():
     st.title("💬 Local Knowledge Quiz System")
     st.caption("🚀 A Streamlit chatbot powered by Dashscope LLM")
 
-    dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path = sidebar_configuration()
+    dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path, task_type = sidebar_configuration()
     initialize_messages()
 
     chat_placeholder = st.container()
@@ -265,37 +269,41 @@ def main():
 
         dashscope.api_key = dashscope_api_key
 
-        user_message = {"role": "user", "content": prompt}
+        # 使用提示系统生成完整的提示，使用默认的任务类型
+        full_prompt = GovernmentAgentPrompts.generate_response(task_type, prompt)
+        
+        user_message = {"role": "user", "content": prompt}  # 只存储用户的原始输入
         st.session_state.messages.append(user_message)
         with chat_placeholder:
             col1, col2, col3 = st.columns([1, 1, 9])
             with col3:
-                st.chat_message(user_message["role"]).write(user_message["content"])
+                st.chat_message(user_message["role"]).write(prompt)
 
         response_placeholder = st.empty()
 
         collection_name = st.session_state.get('collection_name', 'default_collection')
-        st.session_state.messages, response_message = multi_round(st.session_state.messages, option, model,
-                                                                  dashvector_api_key, dashvector_endpoint,
-                                                                  collection_name)
+        _, response_message = multi_round([{"role": "user", "content": full_prompt}], option, model,
+                                          dashvector_api_key, dashvector_endpoint,
+                                          collection_name)
 
         if response_message:
             if response_message["role"] == "assistant":
+                st.session_state.messages.append(response_message)
                 display_realtime_message(response_message["content"], response_placeholder, response_message["role"])
                 # 添加语音输出
                 threading.Thread(target=text_to_speech, args=(response_message["content"],)).start()
 
         st.session_state.chat_records[st.session_state.current_chat_index] = st.session_state.messages
 
-        if len(st.session_state.messages) > 1 and user_message["content"] != "":
-            truncated_title = user_message["content"][:16] + "..." if len(user_message["content"]) > 16 else user_message["content"]
+        if len(st.session_state.messages) > 1 and prompt != "":
+            truncated_title = prompt[:16] + "..." if len(prompt) > 16 else prompt
             st.session_state.chat_titles[st.session_state.current_chat_index] = truncated_title
 
     # 清除语音输入结果
     if "speech_input" in st.session_state:
         del st.session_state.speech_input
 
-    # 添加文件上传功能
+    '''# 添加文件上传功能
     uploaded_file = st.file_uploader("Choose a file", type=["pdf", "docx", "txt"])
     if uploaded_file is not None:
         text = load_document(uploaded_file)
@@ -303,7 +311,7 @@ def main():
             st.success("文件加载成功！")
             converted_text = convert_text(text)
             chunks = split_text(converted_text)
-            visualize_text_processing(text, converted_text, chunks)
+            visualize_text_processing(text, converted_text, chunks)'''
 
     # 在main()函数中添加以下代码
     if st.checkbox("文档处理和可视化"):
