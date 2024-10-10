@@ -76,9 +76,23 @@ def display_realtime_message(message_content, placeholder, role):
 def sidebar_configuration():
     st.sidebar.header("资料库管理")
 
-    dashscope_api_key = st.sidebar.text_input("Dashscope API Key", key="chatbot_api_key", type="password")
-    dashvector_api_key = st.sidebar.text_input("Dashvector API Key", key="chatbot_endpoint_api_key", type="password")
-    dashvector_endpoint = st.sidebar.text_input("Dashvector Endpoint", key="chatbot_endpoint", type="password")
+    # 设置默认的API密钥
+    default_dashscope_api_key = "sk-fbf97351deeb46bf90852772323a928d"
+    default_dashvector_api_key = "sk-YUa7bgM7joCGmKfVCwxLkMEL08ujd0E550F667E5511EF9C5B46618AC3299D"
+    default_dashvector_endpoint = "vrs-cn-0w73ybkzj00017.dashvector.cn-shanghai.aliyuncs.com"
+
+    # 添加一个复选框来选择是否使用默认密钥
+    use_default_keys = st.sidebar.checkbox("使用默认API密钥", value=True)
+
+    if use_default_keys:
+        dashscope_api_key = default_dashscope_api_key
+        dashvector_api_key = default_dashvector_api_key
+        dashvector_endpoint = default_dashvector_endpoint
+    else:
+        dashscope_api_key = st.sidebar.text_input("Dashscope API Key", key="chatbot_api_key", type="password")
+        dashvector_api_key = st.sidebar.text_input("Dashvector API Key", key="chatbot_endpoint_api_key", type="password")
+        dashvector_endpoint = st.sidebar.text_input("Dashvector Endpoint", key="chatbot_endpoint", type="password")
+
     # 添加链接到侧边栏
     st.sidebar.markdown("[Get a Dashscope API key](https://dashscope.console.aliyun.com/)")
     st.sidebar.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
@@ -103,7 +117,7 @@ def sidebar_configuration():
         st.session_state["chat_titles"] = []
 
     if st.sidebar.button("新建聊天记录"):
-        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有么能帮到您？"}])
+        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有什么能帮到您？"}])
         st.session_state["chat_titles"].append("聊天记录 " + str(len(st.session_state["chat_records"])))
         st.session_state["current_chat_index"] = len(st.session_state["chat_records"]) - 1
 
@@ -303,15 +317,15 @@ def main():
     if "speech_input" in st.session_state:
         del st.session_state.speech_input
 
-    '''# 添加文件上传功能
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "docx", "txt"])
-    if uploaded_file is not None:
-        text = load_document(uploaded_file)
-        if text:
-            st.success("文件加载成功！")
-            converted_text = convert_text(text)
-            chunks = split_text(converted_text)
-            visualize_text_processing(text, converted_text, chunks)'''
+    # '''# 添加文件上传功能
+    # uploaded_file = st.file_uploader("Choose a file", type=["pdf", "docx", "txt"])
+    # if uploaded_file is not None:
+    #     text = load_document(uploaded_file)
+    #     if text:
+    #         st.success("文件加载成功！")
+    #         converted_text = convert_text(text)
+    #         chunks = split_text(converted_text)
+    #         visualize_text_processing(text, converted_text, chunks)'''
 
     # 在main()函数中添加以下代码
     if st.checkbox("文档处理和可视化"):
