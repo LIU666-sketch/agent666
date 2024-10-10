@@ -1,0 +1,29 @@
+ pdf_topics_web.py 和 embedding_web.py 中的文本处理函数的主要区别：
+文本提取：
+pdf_topics_web.py 中的 load_pdf(): 使用 pdfminer 库提取文本，适用于直接从上传的文件对象中提取文本。
+embedding_web.py 中的 extract_text_from_pdf(): 使用 PyMuPDF (fitz) 库提取文本，适用于从文件路径读取PDF并提取文本。
+文本分割：
+pdf_topics_web.py 中的 split_text_by_structure(): 基于中文法律文档的结构（如章节条）进行分割，保留了文档的语义结构。
+embedding_web.py 中的 split_text(): 简单地按固定字符数进行分割，不考虑语义结构。
+3. 结构提取：
+pdf_topics_web.py 中的 extract_structure(): 专门用于提取中文法律文档的结构（章、节、条），创建文档的层次结构。
+embedding_web.py 中没有对应的结构提取功能。
+文本清理：
+pdf_topics_web.py 中没有专门的文本清理函数。
+embedding_web.py 中的 clean_text(): 去除多余空格、非ASCII字符等。
+主题提取：
+pdf_topics_web.py 中的 extract_pdf_topics(): 使用jieba分词和词频统计来提取文档的主要主题。
+embedding_web.py 中没有对应的主题提取功能。
+6. 文本转换：
+pdf_topics_web.py 中没有文本转换功能。
+embedding_web.py 中的 convert_text(): 目前只是将文本转为大写（作为示例），但预留了进行更复杂转换的可能性。
+7. 可视化：
+pdf_topics_web.py 中的 visualize_text_processing(): 提供了文本处理结果的可视化，包括原始文本、分割结果、词频统计和文档结构。
+embedding_web.py 中没有可视化功能。
+嵌入生成：
+pdf_topics_web.py 中没有嵌入生成功能。
+embedding_web.py 中的 generate_embeddings(): 使用 DashScope API 生成文本的嵌入向量。
+主要区别在于：
+pdf_topics_web.py 更专注于中文法律文档的结构化分析和可视化。
+embedding_web.py 更侧重于文本的预处理和嵌入生成，为后续的向量检索做准备。
+这两个文件的功能是互补的：pdf_topics_web.py 提供了更好的文档理解和可视化，而 embedding_web.py 则为文档检索和问答系统提供了必要的向量化处理。

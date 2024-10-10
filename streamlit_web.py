@@ -3,10 +3,13 @@ import streamlit as st
 from http import HTTPStatus
 from dashscope import Generation
 import dashscope
-from embedding_web import vectorize_and_store
+from embedding_web import vectorize_and_store, convert_text, split_text
 import time
 from search_web import search_relevant_news
-from pdf_topics_web import extract_pdf_topics, draw_knowledge_graph
+from pdf_topics_web import extract_pdf_topics, draw_knowledge_graph, load_document, visualize_text_processing, process_document
+import speech_recognition as sr
+import pyttsx3
+import threading
 
 
 # Define multi-round conversation function
@@ -70,7 +73,7 @@ def display_realtime_message(message_content, placeholder, role):
 
 # Sidebar design
 def sidebar_configuration():
-    st.sidebar.header("文献库管理")
+    st.sidebar.header("资料库管理")
 
     dashscope_api_key = st.sidebar.text_input("Dashscope API Key", key="chatbot_api_key", type="password")
     dashvector_api_key = st.sidebar.text_input("Dashvector API Key", key="chatbot_endpoint_api_key", type="password")
@@ -80,15 +83,15 @@ def sidebar_configuration():
     st.sidebar.markdown("[View the source code](https://github.com/streamlit/llm-examples/blob/main/Chatbot.py)")
     st.sidebar.markdown(
         "[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/streamlit/llm-examples?quickstart=1)")
-    pdf_folder_path = st.sidebar.text_input("文献来源", key="pdf_folder_path")
+    pdf_folder_path = st.sidebar.text_input("资料来源", key="pdf_folder_path")
 
     pdf_files = list_pdf_files(pdf_folder_path)
     if pdf_files:
-        st.sidebar.subheader("文献 目录")
+        st.sidebar.subheader("资料 目录")
         for pdf_file in pdf_files:
             st.sidebar.markdown(f"- {pdf_file}")
 
-    process_files_button = st.sidebar.button("解析 文献", key="process_button", help="处理选择的PDF文件",
+    process_files_button = st.sidebar.button("解析 资料", key="process_button", help="处理选择的PDF文件",
                                              use_container_width=True)
 
     if process_files_button:
@@ -99,7 +102,7 @@ def sidebar_configuration():
         st.session_state["chat_titles"] = []
 
     if st.sidebar.button("新建聊天记录"):
-        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有什么能帮到您？"}])
+        st.session_state["chat_records"].append([{"role": "assistant", "content": "您好！我有��么能帮到您？"}])
         st.session_state["chat_titles"].append("聊天记录 " + str(len(st.session_state["chat_records"])))
         st.session_state["current_chat_index"] = len(st.session_state["chat_records"]) - 1
 
@@ -142,6 +145,35 @@ def display_messages():
             with col3:
                 st.chat_message(msg["role"]).write(msg["content"])
 
+
+# 在文件开头添加以下导入语句
+import speech_recognition as sr
+import pyttsx3
+import threading
+
+# 在 main 函数之前添加以下函数
+
+def speech_to_text():
+    recognizer = sr.Recognizer()
+    with sr.Microphone() as source:
+        st.write("请说话...")
+        audio = recognizer.listen(source)
+    try:
+        text = recognizer.recognize_google(audio, language="zh-CN")
+        return text
+    except sr.UnknownValueError:
+        st.error("无法识别语音")
+        return None
+    except sr.RequestError:
+        st.error("无法连接到语音识别服务")
+        return None
+
+def text_to_speech(text):
+    engine = pyttsx3.init()
+    engine.setProperty('rate', 150)
+    engine.setProperty('voice', 'zh')
+    engine.say(text)
+    engine.runAndWait()
 
 # Main application logic
 def main():
@@ -218,7 +250,15 @@ def main():
                 st.markdown(f"**{pdf_file}**")
                 draw_knowledge_graph(topics, pdf_file)
 
-    if prompt := st.chat_input("请输入你的问题..."):
+    # 在 chat_placeholder 之后添加语音输入按钮
+    if st.button("语音输入"):
+        user_input = speech_to_text()
+        if user_input:
+            st.text_input("语音输入结果", value=user_input, key="speech_input")
+
+    # 修改现有的输入处理逻辑
+    prompt = st.chat_input("请输入你的问题...") or st.session_state.get("speech_input", "")
+    if prompt:
         if not dashscope_api_key:
             st.info("Please add your Dashscope API key to continue.")
             st.stop()
@@ -242,13 +282,47 @@ def main():
         if response_message:
             if response_message["role"] == "assistant":
                 display_realtime_message(response_message["content"], response_placeholder, response_message["role"])
+                # 添加语音输出
+                threading.Thread(target=text_to_speech, args=(response_message["content"],)).start()
 
         st.session_state.chat_records[st.session_state.current_chat_index] = st.session_state.messages
 
         if len(st.session_state.messages) > 1 and user_message["content"] != "":
-            truncated_title = user_message["content"][:16] + "..." if len(user_message["content"]) > 16 else \
-                user_message["content"]
+            truncated_title = user_message["content"][:16] + "..." if len(user_message["content"]) > 16 else user_message["content"]
             st.session_state.chat_titles[st.session_state.current_chat_index] = truncated_title
+
+    # 清除语音输入结果
+    if "speech_input" in st.session_state:
+        del st.session_state.speech_input
+
+    # 添加文件上传功能
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "docx", "txt"])
+    if uploaded_file is not None:
+        text = load_document(uploaded_file)
+        if text:
+            st.success("文件加载成功！")
+            converted_text = convert_text(text)
+            chunks = split_text(converted_text)
+            visualize_text_processing(text, converted_text, chunks)
+
+    # 在main()函数中添加以下代码
+    if st.checkbox("文档处理和可视化"):
+        uploaded_file = st.file_uploader("选择一个文件", type=["pdf", "docx", "txt"])
+        if uploaded_file is not None:
+            text, chunks, structure = process_document(uploaded_file)
+            if text:
+                st.success("文件处理成功！")
+                
+                # 显示处理后的文本块
+                if st.checkbox("显示处理后的文本块"):
+                    for i, chunk in enumerate(chunks):
+                        st.write(f"块 {i+1}:")
+                        st.write(chunk)
+                        st.write("---")
+                
+                # 显示提取的结构
+                if st.checkbox("显示提取的文档结构"):
+                    st.json(structure)
 
 
 def vectorize_and_store_and_extract_topics(dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path,

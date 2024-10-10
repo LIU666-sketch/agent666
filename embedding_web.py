@@ -126,6 +126,18 @@ def vectorize_and_store(api_key, endpoint_api_key, endpoint, pdf_folder_path, co
 
 
 
+# 新增函数：文本转换
+def convert_text(text, target_language="en"):
+    # 这里使用一个简单的示例，实际中可能需要使用更复杂的翻译API
+    # 为了演示，我们只是将文本转换为大写
+    return text.upper()
+
+# 新增函数：文本分割
+def split_text(text, chunk_size=1000):
+    return [text[i:i+chunk_size] for i in range(0, len(text), chunk_size)]
+
+
+
 
 
 
