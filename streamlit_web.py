@@ -197,6 +197,8 @@ def text_to_speech(text):
 def main():
     st.set_page_config(layout="wide")
 
+    
+
     st.markdown(
         """
         <style>
@@ -208,6 +210,27 @@ def main():
         """,
         unsafe_allow_html=True
     )
+    
+    st.title("💬 政通民和Agent")
+    st.caption("🚀 使用向量检索增强的大语言助手")
+
+# 添加 markdown 介绍
+    st.markdown("""
+    欢迎使用本团队开发的“政通民和”智能政务助手。本系统提供两种工作模式：
+
+    1. **Default 模式**：直接回答问题，基于模型的通用知识。
+    2. **RAG 模式**：利用检索增强生成技术，基于上传的文档回答问题。
+
+    您可以在右侧选择不同的模型来获得不同的回答效果：
+    - qwen-turbo：快速响应，适合一般性问题，经过我们的微调推荐您使用！
+    - qwen-plus：平衡速度和质量，适合较复杂的问题
+    - qwen-max：最高质量输出，适合复杂和专业性问题
+    - qwen2-72b-instruct：基于 instruct 的 72B 模型，适合复杂、专业问题
+                
+    注意：在 RAG 模式下，您可以上传您需要检索的文档，例如当年政府文件，您的审批表文件等，并在右边弹窗内要使用英文字母进行命名哦。
+
+    请在下方输入您的问题，我们的agent将为您提供专业、准确的回答。
+    """)
 
     col1, col2, col3 = st.columns([1, 1, 8])
     with col1:
@@ -227,9 +250,7 @@ def main():
         ], key="model_select", index=0, help="选择你需要的模型")
         st.markdown('</div>', unsafe_allow_html=True)
 
-    st.title("💬 Local Knowledge Quiz System")
-    st.caption("🚀 A Streamlit chatbot powered by Dashscope LLM")
-
+   
     dashscope_api_key, dashvector_api_key, dashvector_endpoint, pdf_folder_path, task_type = sidebar_configuration()
     initialize_messages()
 
@@ -328,7 +349,7 @@ def main():
     #         visualize_text_processing(text, converted_text, chunks)'''
 
     # 在main()函数中添加以下代码
-    if st.checkbox("文档处理和可视化"):
+    if st.checkbox("文档处理和可视化（供政府内部数据分析人员使用，解析并可视化文件的各种文本数据）"):
         uploaded_file = st.file_uploader("选择一个文件", type=["pdf", "docx", "txt"])
         if uploaded_file is not None:
             text, chunks, structure = process_document(uploaded_file)
