@@ -1,47 +1,47 @@
 # Web框架
-streamlit==1.27.0
+streamlit>=1.27.0
 
 # AI和机器学习
-dashscope==1.10.0
-pyttsx3==2.90
-SpeechRecognition==3.10.0
-transformers==4.30.0
-torch==1.13.1
-sentence-transformers==2.2.2
+dashscope>=1.10.0
+pyttsx3>=2.90
+SpeechRecognition>=3.10.0
+transformers>=4.30.0
+torch>=1.13.1
+sentence-transformers>=2.2.2
 
 # 数据处理和可视化
-pandas==1.5.3
-numpy==1.24.3
-matplotlib==3.7.1
-networkx==3.1
+pandas>=1.5.3
+numpy>=1.24.3
+matplotlib>=3.7.1
+networkx>=3.1
 
 # PDF处理
-PyMuPDF==1.21.1
-PyPDF2==3.0.1
-pdfminer.six==20221105
+PyMuPDF>=1.21.1
+PyPDF2>=3.0.1
+pdfminer.six>=20221105
 
 # 自然语言处理
-nltk==3.8.1
-jieba==0.42.1
+nltk>=3.8.1
+jieba>=0.42.1
 
 # 向量数据库和搜索
-faiss-cpu==1.7.4
+faiss-cpu>=1.7.4
 dashvector>=1.0.1
-rank-bm25==0.2.2
+rank-bm25>=0.2.2
 
 # HTTP请求
-requests==2.31.0
+requests>=2.31.0
 
 # 其他实用工具
-python-dotenv==1.0.0
-tqdm==4.65.0
-python-docx==0.8.11
+python-dotenv>=1.0.0
+tqdm>=4.65.0
+python-docx>=0.8.11
 
 # 可视化
-altair==4.2.2
+altair>=4.2.2
 
 # 翻译
-googletrans==3.1.0a0
+googletrans>=3.1.0a0
 
 # 科学计算
-scikit-learn==1.2.2
+scikit-learn>=1.2.2
